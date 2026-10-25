@@ -144,7 +144,7 @@ This stack includes advanced **Multiwindow Multi-Burn-Rate Alerts** based on the
 
 **Shyam Singh**
 * GitHub: [@shyam-codeops](https://github.com/shyam-codeops)
-* Role: DevOps & DevSecOps Engineer
+* Role: DevOps Engineer
 
 ---
 
