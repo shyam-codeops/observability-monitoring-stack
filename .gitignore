@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+*.env
+*.key
+*.crt
+__pycache__/
+*.pyc
+
+# Observability data volumes
+data/
+prometheus_data/
+grafana_data/
+loki_data/
+tempo_data/
+alertmanager_data/

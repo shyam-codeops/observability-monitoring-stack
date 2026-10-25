@@ -1,0 +1,58 @@
+groups:
+  - name: infrastructure_alerts
+    rules:
+      - alert: NodeHighCpuUsage
+        expr: (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          tier: infrastructure
+        annotations:
+          summary: "Host CPU utilization exceeded 85% on {{ $labels.instance }}"
+          description: "CPU utilization has been above 85% for 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "https://wiki.corp/sre/runbooks/high-cpu"
+
+      - alert: NodeHighMemoryUsage
+        expr: ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          tier: infrastructure
+        annotations:
+          summary: "Host Memory utilization exceeded 90% on {{ $labels.instance }}"
+          description: "Available memory has dropped below 10% for 5 minutes. Risk of OOM killer invocation."
+          runbook_url: "https://wiki.corp/sre/runbooks/high-memory"
+
+  - name: kubernetes_workload_alerts
+    rules:
+      - alert: ContainerCrashLoopBackOff
+        expr: increase(kube_pod_container_status_restarts_total[10m]) > 3
+        for: 2m
+        labels:
+          severity: critical
+          tier: application
+        annotations:
+          summary: "Container {{ $labels.container }} in pod {{ $labels.pod }} is restarting frequently"
+          description: "Pod has restarted {{ $value }} times in the past 10 minutes."
+          runbook_url: "https://wiki.corp/sre/runbooks/k8s-pod-crashloop"
+
+      - alert: HighHttpErrorRate5xx
+        expr: (sum(rate(http_requests_total{status=~"5.*"}[5m])) / sum(rate(http_requests_total[5m]))) * 100 > 5
+        for: 3m
+        labels:
+          severity: critical
+          tier: api
+        annotations:
+          summary: "High HTTP 5xx error rate (>5%) across API gateways"
+          description: "HTTP 5xx error rate has reached {{ $value | printf \"%.2f\" }}% over the last 5 minutes."
+
+      - alert: SloErrorBudgetRapidBurn
+        expr: (sum(rate(http_requests_total{status=~"5.*"}[1h])) / sum(rate(http_requests_total[1h]))) > (14.4 * (1 - 0.999))
+        for: 2m
+        labels:
+          severity: page
+          tier: sre
+        annotations:
+          summary: "SLO 99.9% error budget burning at 14.4x rate (10% budget burnt in 1h)"
+          description: "At current burn rate, total monthly error budget will be exhausted within 50 hours."
+          runbook_url: "https://wiki.corp/sre/runbooks/slo-burn-rate"
